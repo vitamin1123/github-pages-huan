@@ -11,7 +11,8 @@
 			{
 				"imports": {
 					"three": "./build/three.module.js",
-					"three/addons/": "./jsm/"
+					"three/addons/": "./jsm/",
+					"OrbitControls": "./jsm/controls/OrbitControls.js"
 				}
 			}
 		</script>
@@ -19,10 +20,11 @@
 		<script type="module">
 
 			import * as THREE from 'three';
-
+			import { OrbitControls } from 'OrbitControls';
 			let camera, scene, renderer;
-			let mesh;
-			const AMOUNT = 16;
+			let controls;
+			let mesh = [];
+			const AMOUNT = 1;
 			const encoder = new TextEncoder("gbk")
 			var xhr = new XMLHttpRequest();
 			var reader = new FileReader();
@@ -32,6 +34,7 @@
 				array16x16[i] = [];  
 				for (let j = 0; j < 16; j++) {  
 					array16x16[i][j] = 0;  
+					
 				}  
 			} 
 
@@ -66,13 +69,21 @@
 
 			const str = new TextDecoder('gbk').decode(codes)
 
-				// 编码表
+				
 			const table = new Uint16Array(65536)
 
 			for (let i = 0; i < str.length; i++) {
 				table[str.charCodeAt(i)] = codes[i]
 			}
-			await hzPrint('你');
+			const cong_str = ['你','好','夏','天']
+			for(let i=0;i< 4;i++) {
+				//hzPrint(cong_str[i])
+				setTimeout(()=> {
+					hzPrint(cong_str[i])
+				},3000*i);
+				//setTimeout(hzPrint, 3000, cong_str[i] )
+			}
+			//hzPrint('好');
 			function stringToGbk(str) {
 				const buf = new Uint8Array(str.length * 2)
 				let n = 0
@@ -132,7 +143,8 @@
 						};  
 						reader.readAsArrayBuffer(file);  
 					});  
-			} 
+			}
+
 			async function hzBuffer(hzstr) {  
 				const buffers = [];
 				const filePath = '.\\hzk16s';  
@@ -160,29 +172,7 @@
 					}  
 				 
 					return buffers;
-				// xhr.open('GET', filePath, true);
-				// xhr.responseType = 'blob';
-				// xhr.onload = function(){
-				// 	if(xhr.status === 200) {
-				// 		var fileContent = xhr.response; //blob 文件
-				// 		for (let z of hzstr) { 
-				// 			const offset = hzkOffset(z);
-				// 			console.log('偏移量',offset);
-				// 			reader.readAsArrayBuffer(fileContent)
-				// 			reader.onload = function(){
-								
-				// 				var buff2 = this.result.slice(offset,offset+32)
-				// 				console.log('result:',this.result,buff2 )
-								
-				// 				buffers.push(buff2)
-				// 				return buff2
-				// 			}
-							
-				// 		}
-						
-				// 	}
-				// }
-				// xhr.send()
+				
 				
 				 
 			} 
@@ -224,35 +214,25 @@
 				const WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
 				const HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
 
-				const cameras = [];
+				
 
-				for ( let y = 0; y < AMOUNT; y ++ ) {
-
-					for ( let x = 0; x < AMOUNT; x ++ ) {
-
-						const subcamera = new THREE.PerspectiveCamera( 40, ASPECT_RATIO, 0.1, 10 );
-						subcamera.viewport = new THREE.Vector4( Math.floor( x * WIDTH ), Math.floor( y * HEIGHT ), Math.ceil( WIDTH ), Math.ceil( HEIGHT ) );
-						subcamera.position.x = ( x / AMOUNT ) - 0.5;
-						subcamera.position.y = 0.5 - ( y / AMOUNT );
-						subcamera.position.z = 1.5;
-						subcamera.position.multiplyScalar( 2 );
-						subcamera.lookAt( 0, 0, 0 );
-						subcamera.updateMatrixWorld();
-						cameras.push( subcamera );
-
-					}
-
-				}
-
-				camera = new THREE.ArrayCamera( cameras );
-				camera.position.z = 3;
+				camera = new THREE.PerspectiveCamera( 40, ASPECT_RATIO, 0.1, 10 );
+				camera.viewport = new THREE.Vector4( Math.floor( 0 ), Math.floor( 0 ), Math.ceil( WIDTH ), Math.ceil( HEIGHT ) );
+				camera.position.x = -0.5;
+				camera.position.y = -0.5;
+				camera.position.z = 2.5;
+				camera.position.multiplyScalar( 2 );
+				camera.lookAt( 0, 0, 0 );
+				camera.updateMatrixWorld();
+				
 
 				scene = new THREE.Scene();
-
+				var axesHelper = new THREE.AxesHelper(5); // 参数是坐标轴的长度  
+				scene.add(axesHelper);  
 				scene.add( new THREE.AmbientLight( 0x999999 ) );
 
 				const light = new THREE.DirectionalLight( 0xffffff, 3 );
-				light.position.set( 0.5, 0.5, 1 );
+				light.position.set( 2, 2, 3 );
 				light.castShadow = true;
 				light.shadow.camera.zoom = 4; // tighter shadow map
 				scene.add( light );
@@ -262,25 +242,30 @@
 
 				const background = new THREE.Mesh( geometryBackground, materialBackground );
 				background.receiveShadow = true;
-				background.position.set( 0, 0, - 1 );
+				background.position.set( 0, 0, -1 );
 				scene.add( background );
 
-				const geometryCylinder = new THREE.CylinderGeometry( 0.5, 0.5, 1, 32 );
-				const materialCylinder = new THREE.MeshPhongMaterial( { color: 0xffdfd4 } );
-
-				mesh = new THREE.Mesh( geometryCylinder, materialCylinder );
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-				scene.add( mesh );
+				for(var i =-8;i<8;i++) {
+					for(var j = 7;j>=-8;j--) {
+						const geometryCylinder = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
+						const materialCylinder = new THREE.MeshPhongMaterial( { color: 0xffdfd4 } );
+						var mesh_tp = new THREE.Mesh( geometryCylinder, materialCylinder );
+						mesh_tp.castShadow = true;
+						mesh_tp.receiveShadow = true;
+						mesh_tp.position.set(i/10,j/10,1)
+						scene.add( mesh_tp );
+						mesh.push(mesh_tp)
+					}
+				}
+				
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.shadowMap.enabled = true;
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.update();
 				document.body.appendChild( renderer.domElement );
-
-				//
-
 				window.addEventListener( 'resize', onWindowResize );
 
 			}
@@ -293,37 +278,27 @@
 
 				camera.aspect = ASPECT_RATIO;
 				camera.updateProjectionMatrix();
-
-				for ( let y = 0; y < AMOUNT; y ++ ) {
-
-					for ( let x = 0; x < AMOUNT; x ++ ) {
-
-						const subcamera = camera.cameras[ AMOUNT * y + x ];
-
-						subcamera.viewport.set(
+				camera.viewport.set(
 							Math.floor( x * WIDTH ),
 							Math.floor( y * HEIGHT ),
 							Math.ceil( WIDTH ),
 							Math.ceil( HEIGHT ) );
-
-						subcamera.aspect = ASPECT_RATIO;
-						subcamera.updateProjectionMatrix();
-
-					}
-
-				}
-
+				
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 			}
 
+			
 			function animate() {
-
-				mesh.rotation.x += 0.005;
-				mesh.rotation.z += 0.01;
-
+				for(var i=0;i<16;i++) {
+					for(var j=0;j<16;j++) {
+						if(array16x16[j][i] == 1) {
+							mesh[i*16+j].rotation.z += 0.01;
+						}
+					}
+				}
+				controls.update();
 				renderer.render( scene, camera );
-
 				requestAnimationFrame( animate );
 
 			}
