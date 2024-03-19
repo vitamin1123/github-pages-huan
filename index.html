@@ -326,7 +326,9 @@
 					pos_x = camera.position.x;
 					pos_y = camera.position.y;
 					pos_z = camera.position.z;
-					
+					let message = {"username":"xyy_3","data": {"pos_x":pos_x,"pos_y":pos_y,"pos_z":pos_z}};
+        			let messageJson = JSON.stringify(message);
+					sendMessage(messageJson)
 					console.log('camera.position', camera.position.x,camera.position.y,camera.position.z);
 				}
 				if(Math.abs(tar_x - controls.target.x) <= Number.EPSILON && Math.abs(tar_y - controls.target.y) <= Number.EPSILON && Math.abs(tar_z - controls.target.z) <= Number.EPSILON){
