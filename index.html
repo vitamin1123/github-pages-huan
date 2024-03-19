@@ -29,6 +29,8 @@
 			var xhr = new XMLHttpRequest();
 			var reader = new FileReader();
 			const array16x16 = []; 
+
+			var ws = new WebSocket("ws://127.0.0.1:8010/ws/3");
 			for (let i = 0; i < 16; i++) {  
 					
 				array16x16[i] = [];  
@@ -75,7 +77,7 @@
 			for (let i = 0; i < str.length; i++) {
 				table[str.charCodeAt(i)] = codes[i]
 			}
-			const cong_str = ['欢','大','公','主','妇','女','节','快','乐']
+			const cong_str = ['欢','大','公','主','女','生','节','快','乐']
 			
 			
 				for(let i=0;i< 400000;i++) {
@@ -299,9 +301,47 @@
 			}
 
 			
+			ws.onmessage = function(event) {
+				console.log("event_data: ",event.data)
+			};
 			var flag = true;
-			function animate() {
+			var pos_x = camera.position.x;
+			var pos_y = camera.position.y;
+			var pos_z = camera.position.z;
+			var tar_x = controls.target.x;
+			var tar_y = controls.target.y;
+			var tar_z = controls.target.z;
+			function sendMessage(x) {
+				console.log("调用了sendMessage",x)
+				if (ws.readyState===1) {
+					ws.send(x)
+				}
 				
+				
+			}
+			function animate() {
+				if(Math.abs(pos_x - camera.position.x) <= Number.EPSILON && Math.abs(pos_y - camera.position.y) <= Number.EPSILON && Math.abs(pos_z - camera.position.z) <= Number.EPSILON){
+
+				}else{
+					pos_x = camera.position.x;
+					pos_y = camera.position.y;
+					pos_z = camera.position.z;
+					
+					console.log('camera.position', camera.position.x,camera.position.y,camera.position.z);
+				}
+				if(Math.abs(tar_x - controls.target.x) <= Number.EPSILON && Math.abs(tar_y - controls.target.y) <= Number.EPSILON && Math.abs(tar_z - controls.target.z) <= Number.EPSILON){
+
+				}else{
+					tar_x = controls.target.x;
+					tar_y = controls.target.y;
+					tar_z = controls.target.z;
+					let message = {"username":"xyy_3","data": {"tar_x":tar_x,"tar_y":tar_y,"tar_z":tar_z}};
+        			let messageJson = JSON.stringify(message);
+					sendMessage(messageJson)
+					console.log('controls.target', controls.target.x,controls.target.y,controls.target.z);
+				}
+				
+				//console.log('controls.target', controls.target);
 				for(var i=0;i<16;i++) {
 					for(var j=0;j<16;j++) {
 						if(array16x16[j][i] == 1) {
@@ -321,8 +361,6 @@
 							}
 
 							//mesh_tp.material.color.set(0xff6a6a);
-							
-
 							//mesh[i*16+j].position.z = (0.1/60);
 							//console.log('位置:', i*16+j , mesh[i*16+j].position.z);
 							// if (mesh[i*16+j].position.z > 1.1) {
