@@ -301,9 +301,7 @@
 			}
 
 			
-			ws.onmessage = function(event) {
-				console.log("event_data: ",event.data)
-			};
+			
 			var flag = true;
 			var pos_x = camera.position.x;
 			var pos_y = camera.position.y;
@@ -311,6 +309,22 @@
 			var tar_x = controls.target.x;
 			var tar_y = controls.target.y;
 			var tar_z = controls.target.z;
+
+			ws.onmessage = function(event) {
+				console.log("event_data: ",typeof(event.data),event.data)
+				var ed_json = JSON.parse(event.data)
+				if ("pos_data" in ed_json) {
+					camera.position.x = ed_json["pos_data"]["pos_x"]
+					camera.position.y = ed_json["pos_data"]["pos_y"]
+					camera.position.z = ed_json["pos_data"]["pos_z"]
+				}
+				if ("tar_data" in ed_json) {
+					controls.target.x = ed_json["tar_data"]["tar_x"]
+					controls.target.y = ed_json["tar_data"]["tar_y"]
+					controls.target.z = ed_json["tar_data"]["tar_z"]
+				}
+			};
+
 			function sendMessage(x) {
 				console.log("调用了sendMessage",x)
 				if (ws.readyState===1) {
@@ -319,6 +333,7 @@
 				
 				
 			}
+
 			function animate() {
 				if(Math.abs(pos_x - camera.position.x) <= Number.EPSILON && Math.abs(pos_y - camera.position.y) <= Number.EPSILON && Math.abs(pos_z - camera.position.z) <= Number.EPSILON){
 
@@ -326,7 +341,7 @@
 					pos_x = camera.position.x;
 					pos_y = camera.position.y;
 					pos_z = camera.position.z;
-					let message = {"username":"xyy_3","data": {"pos_x":pos_x,"pos_y":pos_y,"pos_z":pos_z}};
+					let message = {"username":"xyy_3","pos_data": {"pos_x":pos_x,"pos_y":pos_y,"pos_z":pos_z}};
         			let messageJson = JSON.stringify(message);
 					sendMessage(messageJson)
 					console.log('camera.position', camera.position.x,camera.position.y,camera.position.z);
@@ -337,7 +352,7 @@
 					tar_x = controls.target.x;
 					tar_y = controls.target.y;
 					tar_z = controls.target.z;
-					let message = {"username":"xyy_3","data": {"tar_x":tar_x,"tar_y":tar_y,"tar_z":tar_z}};
+					let message = {"username":"xyy_3","tar_data": {"tar_x":tar_x,"tar_y":tar_y,"tar_z":tar_z}};
         			let messageJson = JSON.stringify(message);
 					sendMessage(messageJson)
 					console.log('controls.target', controls.target.x,controls.target.y,controls.target.z);
